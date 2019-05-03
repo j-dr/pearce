@@ -2,7 +2,7 @@ r"""
 Modules performing small, commonly used tasks throughout the package.
 """
 
-from __future__ import absolute_import, division, print_function, unicode_literals
+
 
 from math import ceil
 import numpy as np
@@ -178,8 +178,8 @@ class compute_conditional_decorator(object):
         # Check if we need to recompute the mass bins, or if it's been memoized
         same_dict = False
 
-        if compute_prim_haloprop_bins_dict.keys() == self.last_compute_prim_haloprop_bins_dict.keys(): # same as we were last asked for, don't recompute
-            for key, val in compute_prim_haloprop_bins_dict.iteritems():
+        if list(compute_prim_haloprop_bins_dict.keys()) == list(self.last_compute_prim_haloprop_bins_dict.keys()): # same as we were last asked for, don't recompute
+            for key, val in compute_prim_haloprop_bins_dict.items():
                 last_val = self.last_compute_prim_haloprop_bins_dict[key]
                 if hasattr(val, 'shape'):
                     if val.shape != last_val.shape:

@@ -74,7 +74,7 @@ class Trainer(object):
         if 'boxno' in cosmo_cfg:
             if ':' in cosmo_cfg['boxno']:  # shorthand to do ranges, like 0:40
                 splitstr = cosmo_cfg['boxno'].split(':')
-                boxnos = range(int(splitstr[0]), int(splitstr[1]))
+                boxnos = list(range(int(splitstr[0]), int(splitstr[1])))
             else:
                 boxnos = cosmo_cfg['boxno']
                 boxnos = [boxnos] if type(boxnos) is int else boxnos
@@ -84,7 +84,7 @@ class Trainer(object):
             if 'realization' in cosmo_cfg:
                 if ':' in cosmo_cfg['realization']:  # shorthand to do ranges, like 0:40
                     splitstr = cosmo_cfg['realization'].split(':')
-                    realizations = range(int(splitstr[0]), int(splitstr[1]))
+                    realizations = list(range(int(splitstr[0]), int(splitstr[1])))
                 else:
                     realizations = cosmo_cfg['realization']
                     realizations = [realizations] if type(realizations) is int else realizations
@@ -164,7 +164,7 @@ class Trainer(object):
             else:
                 self._logMmin_bounds = None
 
-            self._hod_param_names = ordered_params.keys()
+            self._hod_param_names = list(ordered_params.keys())
 
             seed = hod_cfg.get("seed", None)
             self._hod_param_vals = self._make_LHC(ordered_params, hod_cfg['num_hods'], seed = seed)
@@ -203,7 +203,7 @@ class Trainer(object):
 
         points = []
         # by linspacing each parameter and shuffling, I ensure there is only one point in each row, in each dimension.
-        for plow, phigh in ordered_params.itervalues():
+        for plow, phigh in ordered_params.values():
             point = np.linspace(plow, phigh, num=N)
             np.random.shuffle(point)  # makes the cube random.
             points.append(point)
@@ -359,7 +359,7 @@ class Trainer(object):
         res = minimize_scalar(func, bounds = self._logMmin_bounds, args = (hod_params,), options = {'maxiter':100}, method = 'Bounded')
 
         # assuming this doens't fail
-        print 'logMmin', res.x
+        print('logMmin', res.x)
         hod_params['logMmin'] = res.x
 
     def _divide_tasks(self, size):
@@ -372,8 +372,8 @@ class Trainer(object):
             sendbuf, a numpy array of shape (size, ceil(n_tasks/size), 3)
             Each index of the size dimension contains the HOD, SF, and cosmology index of the task
         """
-        all_param_idxs = np.array(list(product(xrange(len(self.cats)), xrange(len(self._scale_factors)),
-                                xrange(self._hod_param_vals.shape[0]))))
+        all_param_idxs = np.array(list(product(range(len(self.cats)), range(len(self._scale_factors)),
+                                range(self._hod_param_vals.shape[0]))))
 
         n_combos = len(all_param_idxs)
         n_per_node = int(np.ceil(float(n_combos)/size))
@@ -388,7 +388,7 @@ class Trainer(object):
         # current hack is to make sure hte number of nodes evenly divides the number of HODs*cosmos*sfs
         #print size, n_per_node, remainder, n_combos
 
-        for i in xrange(size):
+        for i in range(size):
             if remainder == 0:
                 if not zero_remainder: # initially, after we used it as a counter
                     sendbuf[i, :-1, :] =  all_param_idxs[i*n_per_node - past_remainder_counter:(i+1)*n_per_node-past_remainder_counter-1, :]
@@ -419,12 +419,12 @@ class Trainer(object):
         t0 = time()
         for output_idx, (cosmo_idx, scale_factor_idx, hod_idx) in enumerate(param_idxs):
             if rank is not None:
-                print 'Rank: %d, Cosmo: %d, Scale_Factor: %d, HOD: %d'%(rank, cosmo_idx, scale_factor_idx, hod_idx)
+                print('Rank: %d, Cosmo: %d, Scale_Factor: %d, HOD: %d'%(rank, cosmo_idx, scale_factor_idx, hod_idx))
             else:
-                print 'Cosmo: %d, Scale_Factor: %d, HOD: %d'%(cosmo_idx, scale_factor_idx, hod_idx)
+                print('Cosmo: %d, Scale_Factor: %d, HOD: %d'%(cosmo_idx, scale_factor_idx, hod_idx))
 
-            print 'Time: %.2f'%(time()- t0)
-            print '*'*30
+            print('Time: %.2f'%(time()- t0))
+            print('*'*30)
 
             if any(idx == -1 for idx in [cosmo_idx, scale_factor_idx, hod_idx]):
                 continue # skip these placeholders
@@ -445,7 +445,7 @@ class Trainer(object):
 
                 calc_observable = self._get_calc_observable(cat)
 
-            hod_params = dict(zip(self._hod_param_names, self._hod_param_vals[hod_idx, :]))
+            hod_params = dict(list(zip(self._hod_param_names, self._hod_param_vals[hod_idx, :])))
             if self._fixed_nd is not None:
                 self._add_logMmin(hod_params, cat)
             #continue
@@ -465,7 +465,7 @@ class Trainer(object):
                 else:
                     obs_repops = np.zeros((self._n_repops,))
 
-                for repop in xrange(self._n_repops):
+                for repop in range(self._n_repops):
                     #print repop
                     cat.populate(hod_params, min_ptcl= self._min_ptcl)
                     try:
@@ -487,8 +487,8 @@ class Trainer(object):
 
     def write_hdf5_file(self, output, output_cov):
 
-        all_param_idxs = np.array(list(product(xrange(len(self.cats)), xrange(len(self._scale_factors)),
-                                xrange(self._hod_param_vals.shape[0]))))
+        all_param_idxs = np.array(list(product(range(len(self.cats)), range(len(self._scale_factors)),
+                                range(self._hod_param_vals.shape[0]))))
 
         if self.n_bins == 1:
             output = output.reshape((-1,))
@@ -497,7 +497,7 @@ class Trainer(object):
             output = output.reshape((-1, self.n_bins))
             output_cov = output_cov.reshape((-1, self.n_bins, self.n_bins))
 
-        all_cosmo_sf_pairs = np.array(list(product(xrange(len(self.cats)), xrange(len(self._scale_factors)))))
+        all_cosmo_sf_pairs = np.array(list(product(range(len(self.cats)), range(len(self._scale_factors)))))
 
         f = h5py.File(self.output_fname, 'w')
         try:
@@ -603,7 +603,7 @@ class Trainer(object):
             assert self.n_jobs == len(glob(path.join(output_directory, 'trainer_*.npy'))), 'n_jobs has changed, cannot rerun'
 
 
-        for idx in xrange(self.n_jobs):
+        for idx in range(self.n_jobs):
 
             # slice out a portion of the poitns
             jobname = 'trainer_%04d' %idx

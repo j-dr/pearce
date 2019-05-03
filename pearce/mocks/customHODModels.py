@@ -791,7 +791,7 @@ class Reddick14Sats(OccupationComponent):
         """
 
         if self.modulate_with_cenocc:
-            for key, value in self.param_dict.items():
+            for key, value in list(self.param_dict.items()):
                 if key in self.central_occupation_model.param_dict:
                     self.central_occupation_model.param_dict[key] = value
 
@@ -927,9 +927,9 @@ class StepFuncCens(Zheng07Cens):
 
     def mean_occupation(self, **kwargs):
         """See Zheng07 for details"""
-        if 'table' in kwargs.keys():
+        if 'table' in list(kwargs.keys()):
             mass = kwargs['table'][self.prim_haloprop_key]
-        elif 'prim_haloprop' in kwargs.keys():
+        elif 'prim_haloprop' in list(kwargs.keys()):
             mass = kwargs['prim_haloprop']
         else:
             msg = ("\nYou must pass either a ``table`` or ``prim_haloprop`` argument \n"
@@ -950,9 +950,9 @@ class StepFuncSats(Zheng07Sats):
     def mean_occupation(self, **kwargs):
         """see Zheng07 for details."""
         "See Zheng07 for details"
-        if 'table' in kwargs.keys():
+        if 'table' in list(kwargs.keys()):
             mass = kwargs['table'][self.prim_haloprop_key]
-        elif 'prim_haloprop' in kwargs.keys():
+        elif 'prim_haloprop' in list(kwargs.keys()):
             mass = kwargs['prim_haloprop']
         else:
             msg = ("\nYou must pass either a ``table`` or ``prim_haloprop`` argument \n"

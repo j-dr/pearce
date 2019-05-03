@@ -122,7 +122,7 @@ class Chinchilla(Cat):
             version_name = 'Lb1050-1400'
 
             tmp_scale_factors = [0.1429, 0.1667, 0.2, 0.25, 0.3333, 0.4, 0.5, 0.6667, 0.8, 1.0]
-            tmp_fnames = ['out_%d.list' % i for i in xrange(10)]
+            tmp_fnames = ['out_%d.list' % i for i in range(10)]
 
         elif updated_hlists:
             locations = {'ki-ls': '~jderose/desims/BCCSims/c400-2048/rockstar/hlists_new/'}
@@ -222,7 +222,7 @@ class Emu(Cat):
             pmass = 3.9876e10
 
             tmp_scale_factors = [0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0]
-            tmp_fnames = ['out_%d.list' % i for i in xrange(10)]
+            tmp_fnames = ['out_%d.list' % i for i in range(10)]
 
         if Lbox == 200.0:
             locations = {'ki-ls': '/scratch/PI/kipac/yymao/highres_emu/Box000/hlists/'}
@@ -289,7 +289,7 @@ class Guppy(Cat):
         assert system in locations
         loc = locations[system]
 
-        tmp_fnames = ['out_%d.list' % i for i in xrange(10)]
+        tmp_fnames = ['out_%d.list' % i for i in range(10)]
         tmp_scale_factors = [0.1429, 0.1667, 0.2, 0.25, 0.3333, 0.4, 0.5, 0.6667, 0.8, 1.0]
 
         self._update_lists(kwargs, tmp_fnames, tmp_scale_factors)
@@ -406,7 +406,7 @@ class TrainingBox(Cat):
         gadget_loc = loc + 'output/'
         loc += 'halos/m200b/'
 
-        tmp_fnames = ['outbgc2_%d.list' % i for i in xrange(10)]
+        tmp_fnames = ['outbgc2_%d.list' % i for i in range(10)]
         #tmp_fnames = ['TestBox00%d-000_out_parents_5.list' % boxno]
         tmp_scale_factors = [0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0]
         #tmp_scale_factors = [0.645161]
@@ -511,7 +511,7 @@ class TestBox(Cat):
         gadget_loc = loc + 'output/'
         loc += 'halos/m200b/'
 
-        tmp_fnames = ['outbgc2_%d.list' % i for i in xrange(10)]
+        tmp_fnames = ['outbgc2_%d.list' % i for i in range(10)]
         #tmp_fnames = ['TestBox00%d-000_out_parents_5.list' % boxno]
         tmp_scale_factors = [0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0]
         #tmp_scale_factors = [0.645161]
@@ -589,7 +589,7 @@ class ResolutionTestBox(Cat):
         assert system in locations
         loc = locations[system]%boxno
 
-        tmp_fnames = ['outbgc2_%d.list' % i for i in xrange(10)]
+        tmp_fnames = ['outbgc2_%d.list' % i for i in range(10)]
         #tmp_fnames = ['TestBox00%d-000_out_parents_5.list' % boxno]
         tmp_scale_factors = [0.25, 0.333, 0.5, 0.540541, 0.588235, 0.645161, 0.714286, 0.8, 0.909091, 1.0]
         #tmp_scale_factors = [0.645161]

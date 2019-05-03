@@ -81,7 +81,7 @@ class FreeSplitAssembias(HeavisideAssembias):
 
         #retrieve ordinates from our dictionary
         split_ordinates = np.array([self.param_dict[self._get_free_split_assembias_param_dict_key(ipar)]
-                           for ipar in xrange(len(self._split_abscissa))])
+                           for ipar in range(len(self._split_abscissa))])
 
         if self._loginterp:
             spline_function = model_helpers.custom_spline(

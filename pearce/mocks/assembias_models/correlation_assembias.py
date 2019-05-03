@@ -143,7 +143,7 @@ class CorrelationAssembias(HeavisideAssembias):
 
             # TODO i can maybe figure out how to cache the percentiles in the table, but for hte time being i'll just to retrieve them everytime 
             if _HAS_table is True:
-                if self.sec_haloprop_key + '_percentile_values' in table.keys():
+                if self.sec_haloprop_key + '_percentile_values' in list(table.keys()):
 #                    no_edge_percentile_values = table[self.sec_haloprop_key + '_percentile_value'][no_edge_mask]
                     pass
                 else:

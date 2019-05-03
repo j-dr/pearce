@@ -5,7 +5,7 @@
 from time import time
 from multiprocessing import cpu_count, Pool
 import warnings
-from itertools import izip
+
 from os import path
 from ast import literal_eval
 
@@ -29,7 +29,7 @@ def lnprior(theta, param_names, *args):
     :return:
         Either 0 or -np.inf, depending if the params are allowed or not.
     """
-    for p, t in izip(param_names, theta):
+    for p, t in zip(param_names, theta):
         low, high = _emus[0].get_param_bounds(p)
 
         if np.isnan(t) or t < low or t > high:
@@ -56,11 +56,11 @@ def lnlike(theta, param_names, fixed_params, r_bin_centers, y, combined_inv_cov)
     :return:
         The log liklihood of theta given the measurements and the emulator.
     """
-    param_dict = dict(izip(param_names, theta))
+    param_dict = dict(zip(param_names, theta))
     param_dict.update(fixed_params)
 
     emu_preds = []
-    for _emu, in izip(_emus):
+    for _emu, in zip(_emus):
         y_bar = _emu.emulate_wrt_r(param_dict, r_bin_centers)[0]
 
         emu_preds.append(10**y_bar)
@@ -120,8 +120,8 @@ def _run_tests(y, cov, r_bin_centers, param_names, fixed_params, ncores):
     assert all([ _emu.emulator_ndim <= len(fixed_params) + len(param_names) + 1 for _emu in _emus])  # for r
     tmp = param_names[:]
     assert not any([key in param_names for key in fixed_params])  # param names can't include the
-    tmp.extend(fixed_params.keys())
-    print tmp
+    tmp.extend(list(fixed_params.keys()))
+    print(tmp)
     assert _emus[0].check_param_names(tmp, ignore=['r'])
 
     return ncores
@@ -324,7 +324,7 @@ def run_mcmc_config(config_fname):
 
     assert path.isfile(config_fname), "Invalid config fname for chain"
 
-    print config_fname
+    print(config_fname)
     f = h5py.File(config_fname, 'r+')
     emu_type_dict = {'OriginalRecipe':OriginalRecipe,
                      'ExtraCrispy': ExtraCrispy,
@@ -360,7 +360,7 @@ def run_mcmc_config(config_fname):
         emus.append(emu)
         # TODO write hps to the file too
 
-    assert 'obs' in f.attrs.keys(), "No obs info in config file."
+    assert 'obs' in list(f.attrs.keys()), "No obs info in config file."
     obs_cfg = literal_eval(f.attrs['obs'])
     rbins = np.array(obs_cfg['rbins'])
     rpoints = (rbins[1:]+rbins[:-1])/2.0
@@ -394,7 +394,7 @@ def run_mcmc_config(config_fname):
 
     if fixed_params and type(fixed_params) is str:
         assert fixed_params in {'HOD', 'cosmo'}, "Invalied fixed parameter value."
-        assert 'sim' in f.attrs.keys(), "No sim information in config file."
+        assert 'sim' in list(f.attrs.keys()), "No sim information in config file."
         sim_cfg = literal_eval(f.attrs['sim'])
         if fixed_params == 'HOD':
             fixed_params = sim_cfg['hod_params']
@@ -404,14 +404,14 @@ def run_mcmc_config(config_fname):
             fixed_params = sim_cfg['cosmo_params']
 
     elif "HOD" in fixed_params:
-        assert 'sim' in f.attrs.keys(), "No sim information in config file."
+        assert 'sim' in list(f.attrs.keys()), "No sim information in config file."
         sim_cfg = literal_eval(f.attrs['sim'])
         del fixed_params['HOD']
         fixed_params.update(sim_cfg['hod_params'])
         if 'logMmin' in fixed_params:
             del fixed_params['logMmin']
     elif "cosmo" in fixed_params:
-        assert 'sim' in f.attrs.keys(), "No sim information in config file."
+        assert 'sim' in list(f.attrs.keys()), "No sim information in config file."
         sim_cfg = literal_eval(f.attrs['sim'])
         assert 'cosmo_params' in sim_cfg, "Fixed cosmology requested, but the values of the cosmological\"" \
                                                      "params were not specified. Please add them to the sim config."
@@ -426,7 +426,7 @@ def run_mcmc_config(config_fname):
     #chain = np.zeros((nwalkers*nsteps, len(param_names)), dtype={'names':param_names,
     #                                                             'formats':['f8' for _ in param_names]})
     # TODO warning? Overwrite key?
-    if 'chain' in f.keys():
+    if 'chain' in list(f.keys()):
         del f['chain']#[:,:] = chain
         # TODO anyway to make sure all shpaes are right?
         #chain_dset = f['chain']
@@ -434,15 +434,15 @@ def run_mcmc_config(config_fname):
     f.create_dataset('chain', (nwalkers*nsteps, len(param_names)), chunks = True, compression = 'gzip')
 
     #lnprob = np.zeros((nwalkers*nsteps,))
-    if 'lnprob' in f.keys():
+    if 'lnprob' in list(f.keys()):
         del f['lnprob']#[:] = lnprob 
         # TODO anyway to make sure all shpaes are right?
         #lnprob_dset = f['lnprob']
     f.create_dataset('lnprob', (nwalkers*nsteps, ) , chunks = True, compression = 'gzip')
     f.close()
     np.random.seed(seed)
-    print nwalkers
-    print nsteps
+    print(nwalkers)
+    print(nsteps)
     for step, pos in enumerate(run_mcmc_iterator(emus, param_names, y, cov, rpoints,\
                                                  fixed_params=fixed_params, nwalkers=nwalkers,\
                                                  nsteps=nsteps, nburn=nburn, return_lnprob=True, ncores = 16)):

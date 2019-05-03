@@ -2,7 +2,7 @@
 # This module contains my modification of Hearin's decorated HOD, that is a continuous extension of the idea.
 
 from time import time
-from itertools import izip
+
 from functools import wraps
 import inspect
 from warnings import warn
@@ -258,11 +258,11 @@ def compute_conditional_percentile(p = 0.5, **kwargs):
     output = np.zeros_like(prim_haloprop)
 
     if type(p) is float:
-        p = np.array([p for i in xrange(len(prim_haloprop))])
+        p = np.array([p for i in range(len(prim_haloprop))])
 
     # sort on secondary property only with each mass bin
     bins_in_halocat = set(prim_haloprop_bins)
-    for ibin, pp in izip(bins_in_halocat, p):
+    for ibin, pp in zip(bins_in_halocat, p):
         indices_of_prim_haloprop_bin = np.where(prim_haloprop_bins == ibin)[0]
 
         num_in_bin = len(sec_haloprop[indices_of_prim_haloprop_bin])
@@ -315,7 +315,7 @@ class ContinuousAssembias(HeavisideAssembias):
         #get the function specification from the displacement function
         argspec = inspect.getargspec(self.disp_func)
         #add any additional parameters to the parameter dict
-        for par_name, val in izip(argspec.args[1:], argspec.defaults):
+        for par_name, val in zip(argspec.args[1:], argspec.defaults):
             self.param_dict[self._get_disp_func_param_dict_key(par_name)] = val
 
     def _get_disp_func_param_dict_key(self, par_name):
@@ -379,7 +379,7 @@ class ContinuousAssembias(HeavisideAssembias):
 
         #get the kwargs for disp_func from the param dict
         disp_func_kwargs = {}
-        for key, val in self.param_dict.iteritems():
+        for key, val in self.param_dict.items():
             if key[:10] == 'disp_func_' and self.gal_type in key:
                 split_key = key.split('_')
                 disp_func_kwargs[split_key[-2]] = val

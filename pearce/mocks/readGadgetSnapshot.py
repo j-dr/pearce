@@ -61,7 +61,7 @@ def readGadgetSnapshot(filename, read_pos=False, read_vel=False, read_id=False,\
         header = GadgetHeader._make((h[0:6],) + (h[6:12],) + h[12:16] \
                 + (h[16:22],) + h[22:30] + (h[30:36],) + h[36:])
         if print_header:
-            print header
+            print(header)
         if not any(blocks_to_read):
             return header
         ret.append(header)
@@ -69,7 +69,7 @@ def readGadgetSnapshot(filename, read_pos=False, read_vel=False, read_id=False,\
         f.seek(4, 1)
         #
         mass_npart = [0 if m else n for m, n in zip(header.mass, header.npart)]
-        if single_type not in range(6):
+        if single_type not in list(range(6)):
             single_type = -1
         #
         for i, b in enumerate(blocks_to_read):

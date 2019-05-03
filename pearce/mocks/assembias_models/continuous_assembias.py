@@ -103,7 +103,7 @@ class ContinuousAssembias(HeavisideAssembias):
             Value of the slope at each prim_haloprop
         """
         model_ordinates = (self.param_dict[self._get_continuous_assembias_param_dict_key(ipar)]
-                           for ipar in xrange(len(self._assembias_strength_abscissa)))
+                           for ipar in range(len(self._assembias_strength_abscissa)))
         spline_function = model_helpers.custom_spline(
             self._assembias_strength_abscissa, list(model_ordinates), k=3)
 
@@ -269,7 +269,7 @@ class ContinuousAssembias(HeavisideAssembias):
 
             #  Retrieve percentile values (medians) if they've been precomputed. Else, compute them.
             if _HAS_table is True:
-                if self.sec_haloprop_key + '_percentile_values' in table.keys():
+                if self.sec_haloprop_key + '_percentile_values' in list(table.keys()):
                     no_edge_percentile_values = table[self.sec_haloprop_key + '_percentile_value'][no_edge_mask]
                 else:
                     #  the value of sec_haloprop_percentile will be computed from scratch

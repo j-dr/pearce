@@ -174,7 +174,7 @@ def _compute_data(cfg):
             calc_observable = getattr(cat, 'calc_%s' % o)
             if obs_cfg['mean'] or 'shot' in cov_cfg: #TODO add number of pop
                 xi_vals = []
-                for i in xrange(50):
+                for i in range(50):
                     cat.populate(em_params)
                     xi_vals.append(calc_observable(r_bins))
 
@@ -272,5 +272,5 @@ def chain_config(f, cfg):
 
 if __name__ == '__main__':
     from sys import argv
-    print argv[1]
+    print(argv[1])
     main(argv[1])

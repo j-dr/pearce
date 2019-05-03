@@ -3,7 +3,7 @@ I'm modifying the halotools tpcf jackknfie code to return the subregion calculat
 directly manipulate them.
 """
 
-from __future__ import absolute_import, division, unicode_literals
+
 import numpy as np
 from astropy.utils.misc import NumpyRNGContext
 from halotools.mock_observables import *
@@ -100,7 +100,7 @@ def tpcf_subregions(sample1, randoms, rbins, Nsub=[5, 5, 5],
         D1R, RR_dummy= jrandom_counts(sample1, randoms, j_index_1, j_index_random, N_sub_vol,
             rbins, period, 1, do_DR, do_RR=False)
 
-    print 'A'
+    print('A')
     if _sample1_is_sample2:
         D2R = D1R
     else:
@@ -109,7 +109,7 @@ def tpcf_subregions(sample1, randoms, rbins, Nsub=[5, 5, 5],
                     N_sub_vol, rbins, period, num_threads, do_DR, do_RR=False)
         else:
             D2R = None
-    print 'B'
+    print('B')
     if do_DR is True:
         D1R_full = D1R[0, :]
         D1R_sub = D1R[1:, :]
@@ -128,7 +128,7 @@ def tpcf_subregions(sample1, randoms, rbins, Nsub=[5, 5, 5],
         RR_sub = None
 # calculate the correlation function for the subsamples
     outputs = []
-    print 'C'
+    print('C')
 
     if do_auto1 or _sample1_is_sample2:
         xi_11_sub = _TP_estimator(D1D1_sub, D1R_sub, RR_sub, N1_subs, N1_subs, NR_subs, NR_subs, estimator)

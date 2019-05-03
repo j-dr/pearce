@@ -4,7 +4,7 @@
 on catalogs. '''
 
 from os import path
-from itertools import izip
+
 from functools import wraps
 from multiprocessing import cpu_count
 import inspect
@@ -79,7 +79,7 @@ def observable(particles=False):
             if particles:
                 try:
                     assert self.halocat.ptcl_table is not None
-                except AssertionError, InvalidCacheLogEntry:
+                except AssertionError as InvalidCacheLogEntry:
                     raise AssertionError("The function you called requires the loading of particles, but the catalog loaded\
                      doesn't have a particle table. Please try a different catalog")
             return func(self, *args, **kwargs)
@@ -234,7 +234,7 @@ class Cat(object):
         else:
             user_kwargs['filenames'] = tmp_fnames
             user_kwargs['scale_factors'] = tmp_scale_factors
-            sf_idxs = range(len(tmp_scale_factors))
+            sf_idxs = list(range(len(tmp_scale_factors)))
 
         self.sf_idxs = np.array(sf_idxs)
 
@@ -313,10 +313,10 @@ class Cat(object):
         else:
             snapdirs = ['' for i in self.scale_factors]
 
-        for a, z, fname, cache_fnames, snapdir in izip(self.scale_factors, self.redshifts, self.filenames,
+        for a, z, fname, cache_fnames, snapdir in zip(self.scale_factors, self.redshifts, self.filenames,
                                                        self.cache_filenames, snapdirs):
             # TODO get right reader for each halofinder.
-            print a, z
+            print(a, z)
             if scale_factors != 'all' and a not in scale_factors:
                 continue
             reader = RockstarHlistReader(fname, self.columns_to_keep, cache_fnames, self.simname,
@@ -349,7 +349,7 @@ class Cat(object):
         all_particles = np.array([], dtype='float32')
         # TODO should fail gracefully if memory is exceeded or if p is too small.
         for file in glob(path.join(snapdir, 'snapshot*')):
-            print 'Reading %s' % file
+            print('Reading %s' % file)
             # TODO should find out which is "fast" axis and use that.
             # Numpy uses fortran ordering.
             particles = readGadgetSnapshot(file, read_pos=True)[
@@ -378,7 +378,7 @@ class Cat(object):
         ptcl_cache_filename = 'ptcl_%.2f.list.%s_%s.hdf5' % (
         scale_factor, self.simname, self.version_name)  # make sure we don't have redunancies.
         ptcl_cache_filename = path.join(ptcl_cache_loc, ptcl_cache_filename)
-        print ptcl_cache_filename
+        print(ptcl_cache_filename)
         ptcl_catalog.add_ptclcat_to_cache(ptcl_cache_filename, self.simname,
                                           self.version_name + '_particle_%.2f' % (-1 * np.log10(downsample_factor)),
                                           str(downsample_factor),
@@ -409,10 +409,10 @@ class Cat(object):
 
         with fast3tree(all_particles) as tree:
             for r_idx, r in enumerate(radius):
-                print  'Calculating Densities for radius %d' % r
+                print('Calculating Densities for radius %d' % r)
                 # densities[:, r_idx] = densities[:, r_idx]/ (downsample_factor * 4 * np.pi / 3 * r ** 3)
                 for idx, halo_pos in enumerate(
-                        izip(reader.halo_table['halo_x'], reader.halo_table['halo_y'], reader.halo_table['halo_z'])):
+                        zip(reader.halo_table['halo_x'], reader.halo_table['halo_y'], reader.halo_table['halo_z'])):
                     # print idx
                     particle_idxs = tree.query_radius(halo_pos, r, periodic=True)
                     densities[idx, r_idx] += len(particle_idxs)
@@ -501,16 +501,16 @@ class Cat(object):
         z = 1.0 / a - 1
         if type(HOD) is str:
             assert HOD in VALID_HODS
-            print HOD
+            print(HOD)
             if HOD in VALID_HODS - DEFAULT_HODS:  # my custom ones
                 cens_occ = HOD_DICT[HOD][0](redshift=z, **hod_kwargs)
                 # TODO  this is a hack, something better would be better
                 try:  # hack for central modulation
-                    print 'A'
+                    print('A')
                     # the ab ones need to modulated with the baseline model
                     sats_occ = HOD_DICT[HOD][1](redshift=z, cenocc_model=cens_occ, **hod_kwargs)
                 except:  # assume the error is a cenocc issue
-                    print 'B'
+                    print('B')
                     sats_occ = HOD_DICT[HOD][1](redshift=z, **hod_kwargs)
 
                 self.model = HodModelFactory(
@@ -604,7 +604,7 @@ class Cat(object):
         self.model.param_dict.update(params)
         cens_occ, sats_occ = self.model.model_dictionary['centrals_occupation'], self.model.model_dictionary[
             'satellites_occupation']
-        for key, val in params.iteritems():
+        for key, val in params.items():
             if key in cens_occ.param_dict:
                 cens_occ.param_dict[key] = val
             if key in sats_occ.param_dict:

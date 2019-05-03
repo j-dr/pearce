@@ -4,7 +4,7 @@ Helper function that takes care of the training stuff for the queue skipper func
 import sys
 sys.path.append('..')
 from pearce.emulator.trainer import *
-from itertools import izip
+
 from os import remove
 from glob import glob
 
@@ -33,7 +33,7 @@ def compute_on_subset(param_fname):
     """
     job_number = int(path.basename(param_fname).split('.')[0][-4:])
     output_directory = path.dirname(param_fname)
-    print job_number
+    print(job_number)
     trainer = get_trainer(output_directory)
 
     param_idxs = np.loadtxt(param_fname)
@@ -60,7 +60,7 @@ def consolidate_outputs(directory):
 
     all_output, all_output_cov = [], []
     # i'd like to find a way to make the numpy arrays a priori but not sure how
-    for o_fname, cov_fname in izip(output_fnames, output_cov_fnames):
+    for o_fname, cov_fname in zip(output_fnames, output_cov_fnames):
         all_output.append(np.load(o_fname))
         all_output_cov.append(np.load(cov_fname))
 
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     parser.add_argument('param_fname', type = str, help='File where the vector of HOD params are stored.')
     args = vars(parser.parse_args())
     param_fname = args['param_fname']
-    print param_fname
+    print(param_fname)
 
     compute_on_subset(param_fname)
 

@@ -2,12 +2,12 @@
 """The Emu object esentially wraps the GPy gaussian process code. It handles building, training, and predicting."""
 
 import warnings
-from itertools import izip
+
 from collections import OrderedDict
 from os import path
 import sys
 from time import time
-import cPickle as pickle
+import pickle as pickle
 from abc import ABCMeta, abstractmethod
 
 import numpy as np
@@ -37,12 +37,10 @@ DEFAULT_METRIC_NH_PICKLE_FNAME= path.join(DIR_PATH, 'default_nh_metrics.pkl')
 # Worth considering how I rebalance some of these features.
 # Also worth considering if I want to have a data management obj and an emulator object, and combine them into Emus.
 # seems like that may actually be awful.
-class Emu(object):
+class Emu(object, metaclass=ABCMeta):
     '''Main Emulator base class. Cannot itself be instatiated; can only be accessed via subclasses.
        controls all loading, manipulation, and emulation of data.
     '''
-
-    __metaclass__ = ABCMeta
     valid_methods = {'gp', 'svr', 'gbdt', 'rf', 'krr',
                      'linear', 'nn'}  # could add more, coud even check if they exist in sklearn
     skl_methods = {'gbdt': GradientBoostingRegressor, 'rf': RandomForestRegressor, \
@@ -158,18 +156,18 @@ class Emu(object):
             # Why not?
             #if 'cosmo' in fixed_params:
             #    raise ValueError("Can't fix both HOD and cosmology!")
-            min_max_vals = zip(cosmo_param_vals.min(axis=0), cosmo_param_vals.max(axis=0))
-            ordered_params = OrderedDict(izip(cosmo_param_names, min_max_vals))
+            min_max_vals = list(zip(cosmo_param_vals.min(axis=0), cosmo_param_vals.max(axis=0)))
+            ordered_params = OrderedDict(zip(cosmo_param_names, min_max_vals))
         elif fixed_cosmo and not fixed_hod:
-            min_max_vals = zip(hod_param_vals.min(axis=0), hod_param_vals.max(axis=0))
-            ordered_params = OrderedDict(izip(hod_param_names, min_max_vals))
+            min_max_vals = list(zip(hod_param_vals.min(axis=0), hod_param_vals.max(axis=0)))
+            ordered_params = OrderedDict(zip(hod_param_names, min_max_vals))
         elif not fixed_hod and not fixed_cosmo:
             op_names = list(cosmo_param_names[:])
             op_names.extend(hod_param_names)
 
-            min_max_vals = zip(np.r_[cosmo_param_vals.min(axis=0), hod_param_vals.min(axis=0)], \
-                               np.r_[cosmo_param_vals.max(axis=0), hod_param_vals.max(axis=0)])
-            ordered_params = OrderedDict(izip(op_names, min_max_vals))
+            min_max_vals = list(zip(np.r_[cosmo_param_vals.min(axis=0), hod_param_vals.min(axis=0)], \
+                               np.r_[cosmo_param_vals.max(axis=0), hod_param_vals.max(axis=0)]))
+            ordered_params = OrderedDict(zip(op_names, min_max_vals))
         else:
             ordered_params = OrderedDict()
 
@@ -207,14 +205,14 @@ class Emu(object):
         #num_skipped = 0
         num_used = 0
 
-        for cosmo_group_name, cosmo_group in f.iteritems():
+        for cosmo_group_name, cosmo_group in f.items():
             # we're fixed to a particular cosmology #
             if cosmo_group_name == 'attrs':
                 continue
             cosmo_no = int(cosmo_group_name[-2:])
             if 'cosmo' in fixed_params and cosmo_no != fixed_params['cosmo']:
                     continue
-            for sf_group_name, sf_group in cosmo_group.iteritems():
+            for sf_group_name, sf_group in cosmo_group.items():
                 z = 1.0/float(sf_group_name[-5:]) - 1.0
 
                 if 'z' in fixed_params and np.abs(z-fixed_params['z'])> 1e-3:
@@ -228,7 +226,7 @@ class Emu(object):
                 # I avoid loading them from disk in fixed HOD scenarios
                 # Those will be rare enough for now that I don't care.
                 counter = 0
-                for HOD_no, (_obs, _cov) in enumerate(izip(obs_dset, cov_dset)):
+                for HOD_no, (_obs, _cov) in enumerate(zip(obs_dset, cov_dset)):
 
                     if "HOD" in fixed_params and HOD_no != fixed_params['HOD']:
                         continue
@@ -292,7 +290,7 @@ class Emu(object):
             y = y[~nan_idxs]
             ycov_list = []
 
-            for i in xrange(_ycov.shape[-1]):
+            for i in range(_ycov.shape[-1]):
                 mat = _ycov[:,:,i]
                 idxs = nan_idxs[i*mat.shape[0]: (i+1)*mat.shape[0]]
                 ycov_list.append(mat[~idxs,:][:, ~idxs])
@@ -418,7 +416,7 @@ class Emu(object):
         Helper function that returns the names of the parameters in the emulator.
         :return: names, a list of parameter names (in order)
         """
-        return self._ordered_params.keys()
+        return list(self._ordered_params.keys())
 
     def get_param_bounds(self, param):
         """
@@ -444,7 +442,7 @@ class Emu(object):
         :return:
             True if all param_names are in ordered_params, and vice verse. False otherwise
         """
-        op_set = set(self._ordered_params.iterkeys())
+        op_set = set(self._ordered_params.keys())
         ip_set = set(param_names)
 
         for ig in ignore:
@@ -465,14 +463,14 @@ class Emu(object):
         :return: None
         """
         try:
-            assert self.check_param_names(params.keys())
+            assert self.check_param_names(list(params.keys()))
         except AssertionError:
             output = "The input_params passed into get_data did not match those the Emu knows about. \
                                               It's possible fixed_params is missing a parameter, or you defined an extra one. \
                                               Additionally, orded_params could be wrong too!\n"
 
-            op_set = set(self._ordered_params.iterkeys())
-            ip_set = set(params.iterkeys())
+            op_set = set(self._ordered_params.keys())
+            ip_set = set(params.keys())
 
             ip_not_op = ip_set - op_set
             op_not_ip = op_set - ip_set
@@ -484,7 +482,7 @@ class Emu(object):
 
             raise AssertionError(output)
 
-        for pname, (plow, phigh) in self._ordered_params.iteritems():
+        for pname, (plow, phigh) in self._ordered_params.items():
             try:
                 # check if they're in bounds, else raise an informative warning
                 val = params[pname]
@@ -559,20 +557,20 @@ class Emu(object):
         if argsort:  # returns indicies that would sort the array
             # weird try structure because this view is very tempermental!
             try:
-                idxs = np.argsort(t.view(','.join(['float64' for _ in xrange(min(t.shape))])),
-                                  order=['f%d' % i for i in xrange(min(t.shape))], axis=0)
+                idxs = np.argsort(t.view(','.join(['float64' for _ in range(min(t.shape))])),
+                                  order=['f%d' % i for i in range(min(t.shape))], axis=0)
             except ValueError:  # sort with other side
-                idxs = np.argsort(t.view(','.join(['float64' for _ in xrange(max(t.shape))])),
-                                  order=['f%d' % i for i in xrange(max(t.shape))], axis=0)
+                idxs = np.argsort(t.view(','.join(['float64' for _ in range(max(t.shape))])),
+                                  order=['f%d' % i for i in range(max(t.shape))], axis=0)
 
             return idxs[:, 0]
 
         try:
-            t = np.sort(t.view(','.join(['float64' for _ in xrange(min(t.shape))])),
-                        order=['f%d' % i for i in xrange(min(t.shape))], axis=0).view(np.float)
+            t = np.sort(t.view(','.join(['float64' for _ in range(min(t.shape))])),
+                        order=['f%d' % i for i in range(min(t.shape))], axis=0).view(np.float)
         except ValueError:  # sort with other side
-            t = np.sort(t.view(','.join(['float64' for _ in xrange(max(t.shape))])),
-                        order=['f%d' % i for i in xrange(max(t.shape))], axis=0).view(np.float)
+            t = np.sort(t.view(','.join(['float64' for _ in range(max(t.shape))])),
+                        order=['f%d' % i for i in range(max(t.shape))], axis=0).view(np.float)
 
         return t
 
@@ -858,7 +856,7 @@ class Emu(object):
         rpc = np.log10(r_bin_centers) if np.any(r_bin_centers) else np.array([])  # make sure not to throw an error
 
         # now, put them into the emulation dictionary.
-        for key, val in izip(['r', 'z'], (rpc, z_bin_centers)):
+        for key, val in zip(['r', 'z'], (rpc, z_bin_centers)):
             if key not in self.fixed_params and val.size:  # not fixed and the array is nonzero
                 if key not in vep:
                     vep[key] = val
@@ -939,7 +937,7 @@ class Emu(object):
                 _old_idxs = []
                  
                 idxs = sorted(np.random.choice(old_idxs[0].shape[0], N*self.n_bins, replace = False))
-                for i in xrange(self.n_bins):
+                for i in range(self.n_bins):
 
                     in_bin_idxs = old_idxs[i][idxs]
                     _old_idxs.append(in_bin_idxs)
@@ -982,7 +980,7 @@ class Emu(object):
         if statistic is None:
             if hasattr(self, 'r_idx'): #resshape
                 pred_out, out  = [], []
-                for i in xrange(self.n_bins):
+                for i in range(self.n_bins):
                     pred_out.append(pred_y[old_idxs[i]])
                     out.append(y[old_idxs[i]])
 
@@ -1013,7 +1011,7 @@ class Emu(object):
             out = np.abs(pred_y - y) / np.abs(y)
             if hasattr(self, 'r_idx'): #resshape
                 _out = []
-                for i in xrange(self.n_bins):
+                for i in range(self.n_bins):
                     _out.append(out[old_idxs[i]])
                 out = _out
             return out 
@@ -1022,7 +1020,7 @@ class Emu(object):
             out = np.abs(10**pred_y - 10**y) / np.abs(10**y)
             if hasattr(self, 'r_idx'): #resshape
                 _out = []
-                for i in xrange(self.n_bins):
+                for i in range(self.n_bins):
                     _out.append(out[old_idxs[i]])
                 out = _out
             return out 
@@ -1073,7 +1071,7 @@ class Emu(object):
         # t0 = time()
 
         # iterate over training points to leave out
-        for idx in xrange(N):
+        for idx in range(N):
             # swap the values of the LOO point and the last point.
             x[[N - 1, idx]] = x[[idx, N - 1]]
             y[[N - 1, idx]] = y[[idx, N - 1]]
@@ -1308,11 +1306,11 @@ class ExtraCrispy(Emu):
         _yerr = np.zeros_like(_y)
 
         if self.partition_scheme == 'random':
-            shuffled_idxs = range(self.y.shape[0])
+            shuffled_idxs = list(range(self.y.shape[0]))
             np.random.shuffle(shuffled_idxs)
 
             # select potentially self.overlapping subets of the data for each expert
-            for i in xrange(self.experts):
+            for i in range(self.experts):
                 _x[i, :, :] = np.roll(self.x[shuffled_idxs, :], i * points_per_expert / self.overlap, 0)[
                               :points_per_expert, :]
                 _y[i, :] = np.roll(self.y[shuffled_idxs], i * points_per_expert / self.overlap, 0)[:points_per_expert]
@@ -1337,14 +1335,14 @@ class ExtraCrispy(Emu):
 
             # leaves can have different sizes, so we have to treat each leaf differently
             for i, leaf in enumerate(leaves):
-                shuffled_idxs = range(leaf.shape[0])
+                shuffled_idxs = list(range(leaf.shape[0]))
                 np.random.shuffle(shuffled_idxs)
 
                 leaf_ppe = int(1.0 * self.overlap * leaf.shape[0] / self.experts)
                 curr_idx = prev_idx + leaf_ppe
 
                 # select potentially overlapping subets of the data for each expert
-                for j in xrange(self.experts):
+                for j in range(self.experts):
                     _x[j, prev_idx:curr_idx, :] = \
                         np.roll(self.x[leaf[shuffled_idxs], :], j * leaf_ppe / self.overlap, 0)[:leaf_ppe, :]
                     _y[j, prev_idx:curr_idx] = \
@@ -1364,7 +1362,7 @@ class ExtraCrispy(Emu):
 
                 curr_idx = prev_idx + missed_ppe
 
-                for i in xrange(self.experts):
+                for i in range(self.experts):
                     _x[i, prev_idx:curr_idx, :] = \
                         np.roll(self.x[missed_points, :], i * missed_ppe / self.overlap, 0)[:missed_ppe, :]
                     _y[j, prev_idx:curr_idx] = \
@@ -1376,7 +1374,7 @@ class ExtraCrispy(Emu):
                 while curr_idx != self.x.shape[1]:
                     prev_idx = curr_idx
                     curr_idx += 1
-                    for j in xrange(self.experts):
+                    for j in range(self.experts):
                         _x[j, prev_idx:curr_idx, :] = \
                             np.roll(self.x[missed_points, :], (j + i) * missed_ppe / self.overlap, 0)[:1, :]
                         _y[j, prev_idx:curr_idx] = \
@@ -1396,7 +1394,7 @@ class ExtraCrispy(Emu):
         downsample_y = np.zeros((y.shape[0], downsample_N_points))
         downsample_yerr = np.zeros((y.shape[0], downsample_N_points))
 
-        for e in xrange(self.experts):
+        for e in range(self.experts):
 
             downsampled_points = np.random.choice(N_points, downsample_N_points, replace=False)
 
@@ -1423,7 +1421,7 @@ class ExtraCrispy(Emu):
         kernel = self._make_kernel(hyperparams)
 
         if type(kernel) is not list:
-            kernel = [kernel for i in xrange(self.n_bins)]
+            kernel = [kernel for i in range(self.n_bins)]
 
         # now, make a list of emulators
         self._emulators = []
@@ -1439,7 +1437,7 @@ class ExtraCrispy(Emu):
             y = self.downsample_y
             yerr = self.downsample_yerr
 
-        for _x, _y,_yerr,  k in izip(x, y, yerr, kernel):
+        for _x, _y,_yerr,  k in zip(x, y, yerr, kernel):
             noise = Fixed(k.input_dim, covariance_matrix=np.diag(_yerr))
             emulator = GPRegression(_x, _y, k+noise)
             self._emulators.append(emulator)
@@ -1466,7 +1464,7 @@ class ExtraCrispy(Emu):
             else:  # krr
                 hyperparams['kernel'] = lambda x1, x2: kernel.value(np.array([x1]), np.array([x2]))
 
-        self._emulators = [self.skl_methods[self.method](**hyperparams) for i in xrange(self.experts)]
+        self._emulators = [self.skl_methods[self.method](**hyperparams) for i in range(self.experts)]
 
         if self._downsample_factor == 1.0:
             x = self.x
@@ -1474,7 +1472,7 @@ class ExtraCrispy(Emu):
         else:
             x = self.downsample_x
             y = self.downsample_y
-        for i, (emulator, _x, _y) in enumerate(izip(self._emulators, x, y)):
+        for i, (emulator, _x, _y) in enumerate(zip(self._emulators, x, y)):
             emulator.fit(_x, _y)
 
     def _emulate_helper(self, t, gp_errs=False, old_idxs = None):
@@ -1675,10 +1673,10 @@ class SpicyBuffalo(Emu):
         if type(x) is list and len(x) == self.n_bins:
             out = []
             if arr == 'x':
-                for x_in_bin, x_mean, x_std in izip(x, self._x_mean, self._x_std):
+                for x_in_bin, x_mean, x_std in zip(x, self._x_mean, self._x_std):
                     out.append(((x_in_bin - x_mean)/(x_std + 1e-5) ) )
             elif arr == 'y':
-                for x_in_bin, x_mean, x_std in izip(x, self._y_mean, self._y_std):
+                for x_in_bin, x_mean, x_std in zip(x, self._y_mean, self._y_std):
                     out.append(((x_in_bin - x_mean)/(x_std + 1e-5) ) )
             else:
                 raise NotImplementedError
@@ -1714,18 +1712,18 @@ class SpicyBuffalo(Emu):
             return lambda x: np.zeros((self.n_bins,)) 
 
         elif custom_mean_function == 'linear' or custom_mean_function == 1:
-            self._mean_func = [LinearRegression() for i in xrange(self.n_bins)]#TODO hyperparams
+            self._mean_func = [LinearRegression() for i in range(self.n_bins)]#TODO hyperparams
             for i, mf in enumerate(self._mean_func):
                 mf.fit(self.x[i], self.y[i])
 
-            return lambda x: np.array([mf.predict(_x) for _x, mf  in izip(x, self._mean_func)])
+            return lambda x: np.array([mf.predict(_x) for _x, mf  in zip(x, self._mean_func)])
 
         elif type(custom_mean_function) is int and custom_mean_function > 0: # TODO would like to take a dict here maybe, for kwargs
-            self._mean_func = [make_pipeline(PolynomialFeatures(custom_mean_function), LinearRegression()) for i in xrange(self.n_bins)]
+            self._mean_func = [make_pipeline(PolynomialFeatures(custom_mean_function), LinearRegression()) for i in range(self.n_bins)]
             for i, mf in enumerate(self._mean_func):
                 mf.fit(self.x[i], self.y[i])
 
-            return lambda x: np.array([mf.predict(_x) for _x, mf  in izip(x, self._mean_func)])
+            return lambda x: np.array([mf.predict(_x) for _x, mf  in zip(x, self._mean_func)])
 
         else:
             raise NotImplementedError #TODO add something better! 
@@ -1740,11 +1738,11 @@ class SpicyBuffalo(Emu):
 
         N_points = max([_x.shape[0] for _x in x]) # don't sample full HOD/cosmo points. Already broken up in experts
         downsample_N_points = int(downsample_factor * N_points)
-        downsample_x = [np.zeros((downsample_N_points, x[0].shape[1] )) for i in xrange(self.n_bins)]
-        downsample_y = [np.zeros((downsample_N_points, )) for i in xrange(self.n_bins)]
-        downsample_yerr = [ np.zeros((downsample_N_points, )) for i in xrange(self.n_bins)]
+        downsample_x = [np.zeros((downsample_N_points, x[0].shape[1] )) for i in range(self.n_bins)]
+        downsample_y = [np.zeros((downsample_N_points, )) for i in range(self.n_bins)]
+        downsample_yerr = [ np.zeros((downsample_N_points, )) for i in range(self.n_bins)]
 
-        for e in xrange(self.n_bins):
+        for e in range(self.n_bins):
 
             downsampled_points = np.random.choice(len(x[e]), downsample_N_points, replace=False)
 
@@ -1770,7 +1768,7 @@ class SpicyBuffalo(Emu):
         kernel = self._make_kernel(hyperparams)
 
         if type(kernel) is not list:
-            kernel = [kernel for i in xrange(self.n_bins)]
+            kernel = [kernel for i in range(self.n_bins)]
 
         # now, make a list of emulators
         self._emulators = []
@@ -1786,7 +1784,7 @@ class SpicyBuffalo(Emu):
             y= self.downsample_y
             yerr = self.downsample_yerr
 
-        for _x, _y,_yerr, _kernel in izip(x, y,yerr, kernel):
+        for _x, _y,_yerr, _kernel in zip(x, y,yerr, kernel):
             noise = Fixed(_kernel.input_dim, covariance_matrix=np.diag(_yerr))
             emulator = GPRegression(_x,_y, _kernel+noise)
             self._emulators.append(emulator)
@@ -1813,7 +1811,7 @@ class SpicyBuffalo(Emu):
             else:  # krr
                 hyperparams['kernel'] = lambda x1, x2: kernel.value(np.array([x1]), np.array([x2]))
 
-        self._emulators = [self.skl_methods[self.method](**hyperparams) for i in xrange(self.n_bins)]
+        self._emulators = [self.skl_methods[self.method](**hyperparams) for i in range(self.n_bins)]
 
         if self._downsample_factor == 1.0:
             x = self.x
@@ -1821,7 +1819,7 @@ class SpicyBuffalo(Emu):
         else:
             x = self.downsample_x
             y = self.downsample_y
-        for i, (emulator, _x, _y) in enumerate(izip(self._emulators, x, y)):
+        for i, (emulator, _x, _y) in enumerate(zip(self._emulators, x, y)):
             emulator.fit(_x, _y)
 
     def _emulate_helper(self, t, gp_errs=False, old_idxs = None):
@@ -1843,7 +1841,7 @@ class SpicyBuffalo(Emu):
         mu = []
         err = []
 
-        for bin_no, (t_in_bin, mfc, emulator) in enumerate(izip(t, mean_func_at_params, self._emulators)):
+        for bin_no, (t_in_bin, mfc, emulator) in enumerate(zip(t, mean_func_at_params, self._emulators)):
 
             if self.method == 'gp':
                 if gp_errs:
@@ -1981,9 +1979,9 @@ class NashvilleHot(Emu):
         op_names = list(cosmo_param_names[:])
         op_names.extend(hod_param_names)
 
-        min_max_vals = zip(np.r_[cosmo_param_vals.min(axis=0), hod_param_vals.min(axis=0)], \
-                           np.r_[cosmo_param_vals.max(axis=0), hod_param_vals.max(axis=0)])
-        ordered_params = OrderedDict(izip(op_names, min_max_vals))
+        min_max_vals = list(zip(np.r_[cosmo_param_vals.min(axis=0), hod_param_vals.min(axis=0)], \
+                           np.r_[cosmo_param_vals.max(axis=0), hod_param_vals.max(axis=0)]))
+        ordered_params = OrderedDict(zip(op_names, min_max_vals))
 
         # NOTE if its single_valued, may have to fudge this somehow?
         if 'z' not in fixed_params:
@@ -2014,17 +2012,17 @@ class NashvilleHot(Emu):
             y = []
             yerr = []
         else:
-            y = [[] for i in xrange(gt_rmin.shape[0]) if gt_rmin[i]]
-            yerr = [[] for i in xrange(gt_rmin.shape[0]) if gt_rmin[i]]
+            y = [[] for i in range(gt_rmin.shape[0]) if gt_rmin[i]]
+            yerr = [[] for i in range(gt_rmin.shape[0]) if gt_rmin[i]]
 
         ycov = []
 
-        for cosmo_group_name, cosmo_group in f.iteritems():
+        for cosmo_group_name, cosmo_group in f.items():
             # we're fixed to a particular cosmology #
             if cosmo_group_name == 'attrs':
                 continue
 
-            for sf_group_name, sf_group in cosmo_group.iteritems():
+            for sf_group_name, sf_group in cosmo_group.items():
                 z = 1.0 / float(sf_group_name[-5:]) - 1.0
 
                 if 'z' in fixed_params and np.abs(z - fixed_params['z']) > 1e-3:
@@ -2037,7 +2035,7 @@ class NashvilleHot(Emu):
                     y.append(obs_dset[:,r_idx])
                     yerr.append(cov_dset[:, r_idx, r_idx])
                 else:
-                    for r_idx in xrange(gt_rmin.shape[0]):
+                    for r_idx in range(gt_rmin.shape[0]):
                         if not gt_rmin[r_idx]:
                             continue
                         # ugly, but takes the rbin slice and puts it to the corresponding list.
@@ -2073,7 +2071,7 @@ class NashvilleHot(Emu):
             y[nan_idxs] = np.nanmean(y)
             ycov_list = []
 
-            for i in xrange(_ycov.shape[-1]):
+            for i in range(_ycov.shape[-1]):
                 mat = _ycov[:, :, i]
                 idxs = nan_idxs[i * mat.shape[0]: (i + 1) * mat.shape[0]]
                 ycov_list.append(mat[~idxs, :][:, ~idxs])
@@ -2214,7 +2212,7 @@ class NashvilleHot(Emu):
             downsample_x1 = x1[:downsample_N_points, :]
             downsample_x2 = x2
 
-            for i in xrange(self.n_bins):
+            for i in range(self.n_bins):
                 downsample_y.append(y[i, :downsample_N_points,:])
                 downsample_yerr.append(yerr[i, :downsample_N_points,:])
 
@@ -2224,7 +2222,7 @@ class NashvilleHot(Emu):
             downsample_x2 = x2[:downsample_N_points, :]
             downsample_x1 = x1
 
-            for i in xrange(self.n_bins):
+            for i in range(self.n_bins):
                 downsample_y.append(y[i, :, :downsample_N_points])
                 downsample_yerr.append(yerr[i, :, :downsample_N_points])
 
@@ -2261,10 +2259,10 @@ class NashvilleHot(Emu):
                 kern2.append(k2)
 
         if type(kern1) is not list:
-            kern1 = [kern1.copy() for i in xrange(self.n_bins)]
+            kern1 = [kern1.copy() for i in range(self.n_bins)]
 
         if type(kern2) is not list:
-            kern2 = [kern2.copy() for i in xrange(self.n_bins)]
+            kern2 = [kern2.copy() for i in range(self.n_bins)]
 
         # now, make a list of emulators
         self._emulators = []
@@ -2279,7 +2277,7 @@ class NashvilleHot(Emu):
             x1, x2 = self.downsample_x1, self.downsample_x2
             y = self.downsample_y
             yerr = self.downsample_yerr
-        for _y,_yerr, _kern1, _kern2 in izip(y,yerr, kern1, kern2):
+        for _y,_yerr, _kern1, _kern2 in zip(y,yerr, kern1, kern2):
             emulator = GPKroneckerGaussianRegressionVar(x1, x2, _y, _yerr**2, _kern1, _kern2)
             #emulator = GPKroneckerGaussianRegression(x1, x2, _y, _kern1, _kern2)
 
@@ -2413,7 +2411,7 @@ class NashvilleHot(Emu):
         err = []
 
         # TOOD these are all the same now, any way to simplify?
-        for bin_no, (t1_in_bin, t2_in_bin,  mfc, emulator) in enumerate(izip(t1, t2, mean_func_at_params, self._emulators)):
+        for bin_no, (t1_in_bin, t2_in_bin,  mfc, emulator) in enumerate(zip(t1, t2, mean_func_at_params, self._emulators)):
 
             if self.method == 'gp':
                 # because were using a custom object here, don't have to do the copying stuff
