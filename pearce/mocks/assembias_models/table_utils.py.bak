@@ -179,7 +179,7 @@ class compute_conditional_decorator(object):
         same_dict = False
 
         if list(compute_prim_haloprop_bins_dict.keys()) == list(self.last_compute_prim_haloprop_bins_dict.keys()): # same as we were last asked for, don't recompute
-            for key, val in list(compute_prim_haloprop_bins_dict.items()):
+            for key, val in compute_prim_haloprop_bins_dict.items():
                 last_val = self.last_compute_prim_haloprop_bins_dict[key]
                 if hasattr(val, 'shape'):
                     if val.shape != last_val.shape:

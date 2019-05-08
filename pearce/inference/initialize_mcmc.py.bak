@@ -272,5 +272,5 @@ def chain_config(f, cfg):
 
 if __name__ == '__main__':
     from sys import argv
-    print((argv[1]))
+    print(argv[1])
     main(argv[1])

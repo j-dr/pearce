@@ -316,7 +316,7 @@ class Cat(object):
         for a, z, fname, cache_fnames, snapdir in zip(self.scale_factors, self.redshifts, self.filenames,
                                                        self.cache_filenames, snapdirs):
             # TODO get right reader for each halofinder.
-            print((a, z))
+            print(a, z)
             if scale_factors != 'all' and a not in scale_factors:
                 continue
             reader = RockstarHlistReader(fname, self.columns_to_keep, cache_fnames, self.simname,
@@ -349,7 +349,7 @@ class Cat(object):
         all_particles = np.array([], dtype='float32')
         # TODO should fail gracefully if memory is exceeded or if p is too small.
         for file in glob(path.join(snapdir, 'snapshot*')):
-            print(('Reading %s' % file))
+            print('Reading %s' % file)
             # TODO should find out which is "fast" axis and use that.
             # Numpy uses fortran ordering.
             particles = readGadgetSnapshot(file, read_pos=True)[
@@ -409,7 +409,7 @@ class Cat(object):
 
         with fast3tree(all_particles) as tree:
             for r_idx, r in enumerate(radius):
-                print(('Calculating Densities for radius %d' % r))
+                print('Calculating Densities for radius %d' % r)
                 # densities[:, r_idx] = densities[:, r_idx]/ (downsample_factor * 4 * np.pi / 3 * r ** 3)
                 for idx, halo_pos in enumerate(
                         zip(reader.halo_table['halo_x'], reader.halo_table['halo_y'], reader.halo_table['halo_z'])):
@@ -604,7 +604,7 @@ class Cat(object):
         self.model.param_dict.update(params)
         cens_occ, sats_occ = self.model.model_dictionary['centrals_occupation'], self.model.model_dictionary[
             'satellites_occupation']
-        for key, val in list(params.items()):
+        for key, val in params.items():
             if key in cens_occ.param_dict:
                 cens_occ.param_dict[key] = val
             if key in sats_occ.param_dict:

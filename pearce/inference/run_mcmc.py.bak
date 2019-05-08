@@ -56,7 +56,7 @@ def lnlike(theta, param_names, fixed_params, r_bin_centers, y, combined_inv_cov)
     :return:
         The log liklihood of theta given the measurements and the emulator.
     """
-    param_dict = dict(list(zip(param_names, theta)))
+    param_dict = dict(zip(param_names, theta))
     param_dict.update(fixed_params)
 
     emu_preds = []

@@ -203,7 +203,7 @@ class Trainer(object):
 
         points = []
         # by linspacing each parameter and shuffling, I ensure there is only one point in each row, in each dimension.
-        for plow, phigh in list(ordered_params.values()):
+        for plow, phigh in ordered_params.values():
             point = np.linspace(plow, phigh, num=N)
             np.random.shuffle(point)  # makes the cube random.
             points.append(point)
@@ -359,7 +359,7 @@ class Trainer(object):
         res = minimize_scalar(func, bounds = self._logMmin_bounds, args = (hod_params,), options = {'maxiter':100}, method = 'Bounded')
 
         # assuming this doens't fail
-        print(('logMmin', res.x))
+        print('logMmin', res.x)
         hod_params['logMmin'] = res.x
 
     def _divide_tasks(self, size):
@@ -372,8 +372,8 @@ class Trainer(object):
             sendbuf, a numpy array of shape (size, ceil(n_tasks/size), 3)
             Each index of the size dimension contains the HOD, SF, and cosmology index of the task
         """
-        all_param_idxs = np.array(list(product(list(range(len(self.cats))), list(range(len(self._scale_factors))),
-                                list(range(self._hod_param_vals.shape[0])))))
+        all_param_idxs = np.array(list(product(range(len(self.cats)), range(len(self._scale_factors)),
+                                range(self._hod_param_vals.shape[0]))))
 
         n_combos = len(all_param_idxs)
         n_per_node = int(np.ceil(float(n_combos)/size))
@@ -419,12 +419,12 @@ class Trainer(object):
         t0 = time()
         for output_idx, (cosmo_idx, scale_factor_idx, hod_idx) in enumerate(param_idxs):
             if rank is not None:
-                print(('Rank: %d, Cosmo: %d, Scale_Factor: %d, HOD: %d'%(rank, cosmo_idx, scale_factor_idx, hod_idx)))
+                print('Rank: %d, Cosmo: %d, Scale_Factor: %d, HOD: %d'%(rank, cosmo_idx, scale_factor_idx, hod_idx))
             else:
-                print(('Cosmo: %d, Scale_Factor: %d, HOD: %d'%(cosmo_idx, scale_factor_idx, hod_idx)))
+                print('Cosmo: %d, Scale_Factor: %d, HOD: %d'%(cosmo_idx, scale_factor_idx, hod_idx))
 
-            print(('Time: %.2f'%(time()- t0)))
-            print(('*'*30))
+            print('Time: %.2f'%(time()- t0))
+            print('*'*30)
 
             if any(idx == -1 for idx in [cosmo_idx, scale_factor_idx, hod_idx]):
                 continue # skip these placeholders
@@ -487,8 +487,8 @@ class Trainer(object):
 
     def write_hdf5_file(self, output, output_cov):
 
-        all_param_idxs = np.array(list(product(list(range(len(self.cats))), list(range(len(self._scale_factors))),
-                                list(range(self._hod_param_vals.shape[0])))))
+        all_param_idxs = np.array(list(product(range(len(self.cats)), range(len(self._scale_factors)),
+                                range(self._hod_param_vals.shape[0]))))
 
         if self.n_bins == 1:
             output = output.reshape((-1,))
@@ -497,7 +497,7 @@ class Trainer(object):
             output = output.reshape((-1, self.n_bins))
             output_cov = output_cov.reshape((-1, self.n_bins, self.n_bins))
 
-        all_cosmo_sf_pairs = np.array(list(product(list(range(len(self.cats))), list(range(len(self._scale_factors))))))
+        all_cosmo_sf_pairs = np.array(list(product(range(len(self.cats)), range(len(self._scale_factors)))))
 
         f = h5py.File(self.output_fname, 'w')
         try:

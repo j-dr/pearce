@@ -379,7 +379,7 @@ class ContinuousAssembias(HeavisideAssembias):
 
         #get the kwargs for disp_func from the param dict
         disp_func_kwargs = {}
-        for key, val in list(self.param_dict.items()):
+        for key, val in self.param_dict.items():
             if key[:10] == 'disp_func_' and self.gal_type in key:
                 split_key = key.split('_')
                 disp_func_kwargs[split_key[-2]] = val

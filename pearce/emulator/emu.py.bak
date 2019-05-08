@@ -157,17 +157,17 @@ class Emu(object, metaclass=ABCMeta):
             #if 'cosmo' in fixed_params:
             #    raise ValueError("Can't fix both HOD and cosmology!")
             min_max_vals = list(zip(cosmo_param_vals.min(axis=0), cosmo_param_vals.max(axis=0)))
-            ordered_params = OrderedDict(list(zip(cosmo_param_names, min_max_vals)))
+            ordered_params = OrderedDict(zip(cosmo_param_names, min_max_vals))
         elif fixed_cosmo and not fixed_hod:
             min_max_vals = list(zip(hod_param_vals.min(axis=0), hod_param_vals.max(axis=0)))
-            ordered_params = OrderedDict(list(zip(hod_param_names, min_max_vals)))
+            ordered_params = OrderedDict(zip(hod_param_names, min_max_vals))
         elif not fixed_hod and not fixed_cosmo:
             op_names = list(cosmo_param_names[:])
             op_names.extend(hod_param_names)
 
             min_max_vals = list(zip(np.r_[cosmo_param_vals.min(axis=0), hod_param_vals.min(axis=0)], \
                                np.r_[cosmo_param_vals.max(axis=0), hod_param_vals.max(axis=0)]))
-            ordered_params = OrderedDict(list(zip(op_names, min_max_vals)))
+            ordered_params = OrderedDict(zip(op_names, min_max_vals))
         else:
             ordered_params = OrderedDict()
 
@@ -205,14 +205,14 @@ class Emu(object, metaclass=ABCMeta):
         #num_skipped = 0
         num_used = 0
 
-        for cosmo_group_name, cosmo_group in list(f.items()):
+        for cosmo_group_name, cosmo_group in f.items():
             # we're fixed to a particular cosmology #
             if cosmo_group_name == 'attrs':
                 continue
             cosmo_no = int(cosmo_group_name[-2:])
             if 'cosmo' in fixed_params and cosmo_no != fixed_params['cosmo']:
                     continue
-            for sf_group_name, sf_group in list(cosmo_group.items()):
+            for sf_group_name, sf_group in cosmo_group.items():
                 z = 1.0/float(sf_group_name[-5:]) - 1.0
 
                 if 'z' in fixed_params and np.abs(z-fixed_params['z'])> 1e-3:
@@ -482,7 +482,7 @@ class Emu(object, metaclass=ABCMeta):
 
             raise AssertionError(output)
 
-        for pname, (plow, phigh) in list(self._ordered_params.items()):
+        for pname, (plow, phigh) in self._ordered_params.items():
             try:
                 # check if they're in bounds, else raise an informative warning
                 val = params[pname]
@@ -1981,7 +1981,7 @@ class NashvilleHot(Emu):
 
         min_max_vals = list(zip(np.r_[cosmo_param_vals.min(axis=0), hod_param_vals.min(axis=0)], \
                            np.r_[cosmo_param_vals.max(axis=0), hod_param_vals.max(axis=0)]))
-        ordered_params = OrderedDict(list(zip(op_names, min_max_vals)))
+        ordered_params = OrderedDict(zip(op_names, min_max_vals))
 
         # NOTE if its single_valued, may have to fudge this somehow?
         if 'z' not in fixed_params:
@@ -2017,12 +2017,12 @@ class NashvilleHot(Emu):
 
         ycov = []
 
-        for cosmo_group_name, cosmo_group in list(f.items()):
+        for cosmo_group_name, cosmo_group in f.items():
             # we're fixed to a particular cosmology #
             if cosmo_group_name == 'attrs':
                 continue
 
-            for sf_group_name, sf_group in list(cosmo_group.items()):
+            for sf_group_name, sf_group in cosmo_group.items():
                 z = 1.0 / float(sf_group_name[-5:]) - 1.0
 
                 if 'z' in fixed_params and np.abs(z - fixed_params['z']) > 1e-3:
